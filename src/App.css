@@ -1,0 +1,25 @@
+.main {
+    padding: 15px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 3px solid gray;
+}
+
+th,
+td {
+    padding: 10px;
+    border: 1px solid gray;
+}
+
+th {
+    text-align: left;
+    background-color: beige;
+}
+
+.error {
+    white-space: break-spaces;
+    color: red;
+}

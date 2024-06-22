@@ -1,29 +1,115 @@
-import React, {useState} from 'react';
-import './App.css';
+import { useEffect, useState } from 'react';
+
 import Weather from './components/Weather';
 
+import { AVAILABLE_VARIABLES } from './constants';
+
+import { TVariable } from './types';
+
+import { useDebounce } from './hooks/use-debounce';
+
+import './App.css';
+
+const DEFAULT_VALUE: TVariable[] = ['rain_sum', 'snowfall_sum'];
 
 function App() {
-    const [variables, setVariables] = useState(['rain_sum', 'snowfall_sum']);
+    const [variables, setVariables] = useState<string[]>(DEFAULT_VALUE);
+    const [invalidVars, setInvalidVars] = useState<string[]>([]);
+    const [validVariables, setValidVariables] = useState<TVariable[]>(DEFAULT_VALUE);
 
-  return (
-    <div className="main">
-        <div>
-            <label>
-                {/* available values:
-                weathercode, temperature_2m_max, temperature_2m_min, apparent_temperature_max, apparent_temperature_min, sunrise, sunset, precipitation_sum, rain_sum,
-                showers_sum, snowfall_sum, precipitation_hours, windspeed_10m_max, windgusts_10m_max, winddirection_10m_dominant, shortwave_radiation_sum, et0_fao_evapotranspiration
-                */}
+    const inputValue = variables.join(", ");
+    
+    const debouncedVariables = useDebounce(validVariables, 500);
 
-                <input type="text" onInput={e => {
-                    variables.push((e.target as HTMLInputElement).value)
-                }}/>
+    const handleTextareaInput = (value: string) => {
+        const currVars = value.split(", ");
+        setVariables(currVars);
+    }
 
-            </label>
+    const handleCheckboxChange = (isChecked: boolean, key: TVariable): void => {
+        console.log(isChecked, key);
+        setVariables((prev) => {
+            if (isChecked) return [...prev, key];
+            return prev.filter((item) => item !== key)
+        })
+    };
+
+    useEffect(() => {
+        const currInvalidVars: string[] = [];
+        variables.forEach((item) => {
+            if (!AVAILABLE_VARIABLES.includes(item as TVariable)) {
+                currInvalidVars.push(item);
+            }
+        });
+
+        if (currInvalidVars.length) {
+            setInvalidVars(currInvalidVars);
+            return
+        }
+        setValidVariables(variables as TVariable[]);
+        setInvalidVars([]);
+    }, [variables])
+
+    return (
+        <div className="main">
+            <h1>Daily Weather App</h1>
+            <h3>
+                Available values:
+            </h3>
+            <p>
+                {AVAILABLE_VARIABLES.map((item, index) => 
+                    item + `${index !== AVAILABLE_VARIABLES.length - 1 ? ", " : ""}`
+                )}
+            </p>
+            <div>
+                <h4>
+                    Please input any of the available variables:
+                </h4>
+                <label>
+                    {/* букв может быть много, поэтому думаю с textarea будет по-удобнее  */}
+                    <textarea 
+                        rows={5}
+                        cols={50}
+                        value={inputValue}
+                        onInput={e => handleTextareaInput((e.target as HTMLInputElement).value)}
+                    />
+                </label>
+            </div>
+
+            <h4>
+                Or you can use checkboxes:
+            </h4>
+            <fieldset>
+                {AVAILABLE_VARIABLES.map((item) => (
+                    <div>
+                        <label>
+                            <input 
+                                key={item} 
+                                type="checkbox"
+                                name={item}
+                                checked={variables.includes(item)}
+                                onChange={(e) => handleCheckboxChange(e.target.checked, item)}
+                            />
+                            {item}
+                        </label>
+                    </div>
+                ))}
+            </fieldset>
+
+            {invalidVars.length ? (
+                <p className='error'>
+                    {`${invalidVars.join(", ")} - is invalid vars`}
+                </p>
+            ) : (
+                <>
+                    <h2>
+                        Your Daily Weather
+                    </h2>
+                    <Weather lat={55.751244} long={37.618423} variables={debouncedVariables} />
+                </>
+            )}
         </div>
-      <Weather lat={55.751244} long={37.618423} variables={variables} />
-    </div>
-  );
+    );
 }
 
 export default App;
