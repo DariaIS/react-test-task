@@ -33,7 +33,7 @@ const Weather: React.FC<Props> = ({
 
     useEffect(() => {
         // ошибка была в том, что мы пытались засетать значение ассинхронной операции
-        // поэтому в `weather` получали `Promise {<pending>}`, который вернул нам fetch
+        // поэтому в weather мы получали `Promise {<pending>}`, который вернул нам fetch
         
         /*
         const url = getUrl({ lat, long, variables });
@@ -57,7 +57,7 @@ const Weather: React.FC<Props> = ({
     }, [lat, long, variables]);
 
     return (
-        <table style={{width: '100%'}}>
+        <table>
             <thead>
                 <tr>
                     <th>date</th>
