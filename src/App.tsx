@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import Weather from './components/Weather';
+import { Weather } from './components/Weather';
 
 import { AVAILABLE_VARIABLES } from './constants';
 
@@ -13,8 +13,13 @@ import './App.css';
 const DEFAULT_VALUE: TVariable[] = ['rain_sum', 'snowfall_sum'];
 
 function App() {
+    // введенное значение
     const [variables, setVariables] = useState<string[]>(DEFAULT_VALUE);
+
+    // введенные невалидные переменные
     const [invalidVars, setInvalidVars] = useState<string[]>([]);
+
+    // провалидированные переменные, которые отправятся в запросе
     const [validVariables, setValidVariables] = useState<TVariable[]>(DEFAULT_VALUE);
 
     const inputValue = variables.join(", ");
@@ -27,7 +32,6 @@ function App() {
     }
 
     const handleCheckboxChange = (isChecked: boolean, key: TVariable): void => {
-        console.log(isChecked, key);
         setVariables((prev) => {
             if (isChecked) return [...prev, key];
             return prev.filter((item) => item !== key)
@@ -81,7 +85,7 @@ function App() {
             </h4>
             <fieldset>
                 {AVAILABLE_VARIABLES.map((item) => (
-                    <div>
+                    <div key={item}>
                         <label>
                             <input 
                                 key={item} 
@@ -101,12 +105,7 @@ function App() {
                     {`${invalidVars.join(", ")} - is invalid vars`}
                 </p>
             ) : (
-                <>
-                    <h2>
-                        Your Daily Weather
-                    </h2>
-                    <Weather lat={55.751244} long={37.618423} variables={debouncedVariables} />
-                </>
+                <Weather lat={55.751244} long={37.618423} variables={debouncedVariables} />
             )}
         </div>
     );

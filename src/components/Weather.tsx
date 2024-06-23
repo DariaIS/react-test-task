@@ -24,12 +24,13 @@ interface Props {
     variables: TVariable[];
 }
 
-const Weather: React.FC<Props> = ({
+const _Weather: React.FC<Props> = ({
     lat,
     long,
     variables
 }) => {
     const [weather, setWeather] = useState<TWeather>();
+    const [error, setError] = useState<string>();
 
     useEffect(() => {
         // ошибка была в том, что мы пытались засетать значение ассинхронной операции
@@ -46,46 +47,60 @@ const Weather: React.FC<Props> = ({
         
         // но мне больше нравится async / await поэтому я переписала на него 🌚 
         const fetchWeather = async () => {
-            console.log(variables);
-            const url = getUrl({ lat, long, variables });
-            let response = await fetch(url, { method: 'GET' } );                        
-            const data = await response.json();
-            setWeather(data);
+            try {
+                const url = getUrl({ lat, long, variables });
+                let response = await fetch(url, { method: 'GET' } );                        
+                const data = await response.json();
+                setWeather(data);
+                if (error) setError();
+            } catch(err) {
+                setError('Oops, something went wrong. You might want to check the console')
+                console.log(err);
+            }
         }
 
         fetchWeather();
     }, [lat, long, variables]);
 
-    return (
-        <table>
-            <thead>
-                <tr>
-                    <th>date</th>
-                    {variables.map(variable => <th key={variable}>{variable}</th>)}
-                </tr>
-            </thead>
-            <tbody>
-                {weather && 
-                    (weather.daily.time.map((time, index) => (
-                        <tr key={time + index}>
-                            <th> {time} </th>
+    return error ? (
+        <p className='error'>
+            {error}
+        </p>
+    ) : (
+        <>
+            <h2>
+                Your Daily Weather
+            </h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>date</th>
+                        {variables.map(variable => <th key={variable}>{variable}</th>)}
+                    </tr>
+                </thead>
+                <tbody>
+                    {weather && 
+                        (weather.daily.time.map((time, index) => (
+                            <tr key={time + index}>
+                                <th> {time} </th>
 
-                            {variables.map(variable =>
-                                // так как не все указанные  в ридми переменные присутствуют в
-                                // weather.daily, используем тернальник
-                                (variable in weather.daily ? (
-                                    <td key={variable}>
-                                        {weather.daily[variable][index]}
-                                    </td>
-                                ) : <></>)
-                            )}
-                        </tr>
-                    ))
-                )}
-            </tbody>
-        </table>
+                                {variables.map(variable =>
+                                    // так как не все указанные  в ридми переменные присутствуют в
+                                    // weather.daily, используем тернальник
+                                    (variable in weather.daily ? (
+                                        <td key={variable}>
+                                            {weather.daily[variable][index]}
+                                        </td>
+                                    ) : <></>)
+                                )}
+                            </tr>
+                        ))
+                    )}
+                </tbody>
+            </table>
+        </>
     )
 }
 
-
-export default Weather;
+// обернула в React.memo чтобы избежать апдейта при изменении чекбоксов и ввода в textarea
+export const Weather = React.memo(_Weather);
