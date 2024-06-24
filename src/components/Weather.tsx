@@ -1,19 +1,17 @@
-/* tslint:disable */
-// @ts-nocheck
 import React, { useEffect, useState } from 'react';
 
-import { TWeather } from '../types';
+import { TVariable, TWeather } from '../types';
 
 const URL = "https://api.open-meteo.com/v1/forecast";
 
 const getUrl = ({ lat, long, variables }: Props) => (
     URL + "?" + new URLSearchParams({
-        latitude: lat,
-        longitude: long,
+        latitude: String(lat),
+        longitude: String(long),
         daily: variables.join(','),
         timezone: "Europe/Moscow",
-        past_days: 0,
-        shortwave_radiation_sum: 0
+        past_days: "0",
+        shortwave_radiation_sum: "0"
     }).toString()
 );
 
@@ -30,7 +28,7 @@ const _Weather: React.FC<Props> = ({
     variables
 }) => {
     const [weather, setWeather] = useState<TWeather>();
-    const [error, setError] = useState<string>();
+    const [error, setError] = useState<string>("");
 
     useEffect(() => {
         // ошибка была в том, что мы пытались засетать значение ассинхронной операции
@@ -52,10 +50,10 @@ const _Weather: React.FC<Props> = ({
                 let response = await fetch(url, { method: 'GET' } );                        
                 const data = await response.json();
                 setWeather(data);
-                if (error) setError();
+                if (error) setError("");
             } catch(err) {
                 setError('Oops, something went wrong. You might want to check the console')
-                console.log(err);
+                console.error(err);
             }
         }
 
@@ -81,17 +79,19 @@ const _Weather: React.FC<Props> = ({
                 <tbody>
                     {weather && 
                         (weather.daily.time.map((time, index) => (
-                            <tr key={time + index}>
+                            <tr key={time}>
                                 <th> {time} </th>
 
                                 {variables.map(variable =>
-                                    // так как не все указанные  в ридми переменные присутствуют в
+                                    // так как не все указанные в ридми переменные присутствуют в
                                     // weather.daily, используем тернальник
                                     (variable in weather.daily ? (
                                         <td key={variable}>
-                                            {weather.daily[variable][index]}
+                                            {weather.daily[variable as keyof typeof weather.daily][index]}
                                         </td>
-                                    ) : <></>)
+                                    ) : (
+                                        <React.Fragment key={variable}></React.Fragment>
+                                    ))
                                 )}
                             </tr>
                         ))
